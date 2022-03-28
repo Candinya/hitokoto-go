@@ -11,8 +11,8 @@ func r(e *gin.Engine) {
 
 	// Public API
 	publicEndpoint := e.Group("/")
+	publicEndpoint.Use(middlewares.PublicCORS())
 	{
-		publicEndpoint.Use(middlewares.PublicCORS())
 		publicEndpoint.GET("/", public.GetHitokoto)
 	}
 
