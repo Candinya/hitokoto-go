@@ -17,8 +17,8 @@ services:
       - POSTGRES_CONNECTION_STRING=postgres://hitokoto:hitokoto@db:5432/hitokoto
       - REDIS_CONNECTION_STRING=redis://redis:6379/0
       - MODE=prod
-    volumes: # Required when import data
-      - "./sentences-bundle:/app/sentences-bundle:ro"
+#    volumes: # Required when import data
+#      - "./sentences-bundle:/app/sentences-bundle:ro"
 
   db:
     restart: always

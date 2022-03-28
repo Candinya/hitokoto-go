@@ -37,7 +37,7 @@
 
 #### docker-compose 方式
 
-1. 取消注释 `docker-compose.yml` 文件中的第 19、20 行关于卷映射的描述。
+1. 取消注释 `docker-compose.yml` 文件中的第 20、21 行关于卷映射的描述。
 2. 运行 `docker-compose run --rm app hitokoto-go --import` 命令，初始化 docker 运行环境，并导入数据。如果系统提示无法连接到数据库，可能是数据库还未启动，您可稍后重试。
 3. 由于在正式运行环境中不需要导入文件的映射，所以推荐您在数据导入工作完成后重新恢复第一步中取消掉的注释。
 
