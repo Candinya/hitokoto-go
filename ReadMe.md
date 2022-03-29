@@ -90,7 +90,91 @@ REDIS_CONNECTION_STRING=redis://localhost:6379/0
 
 ## 性能
 
-当前版本的性能依旧拉跨，尽可能使用 Redis 在优化了，但依旧容易崩，将继续尝试解决这些问题。
+以下数据为使用单点 Docker-Compose 部署得出，仅供参考，具体情况请以实际体验为准。
+
+### 服务器
+
+```shell
+root@core:~/hitokoto-go# wrk -t8 -c1000 -d10s --latency http://127.0.0.1:8080
+Running 10s test @ http://127.0.0.1:8080
+  8 threads and 1000 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency   291.75ms  264.35ms   2.00s    82.82%
+    Req/Sec   505.38    346.25     1.54k    57.34%
+  Latency Distribution
+     50%  184.58ms
+     75%  372.49ms
+     90%  675.90ms
+     99%    1.22s 
+  39882 requests in 10.08s, 30.00MB read
+Requests/sec:   3956.95
+Transfer/sec:      2.98MB
+root@core:~/hitokoto-go# neofetch
+       _,met$$$$$gg.          root@core.nyawork.dev 
+    ,g$$$$$$$$$$$$$$$P.       --------------------- 
+  ,g$$P"     """Y$$.".        OS: Debian GNU/Linux 11 (bullseye) x86_64 
+ ,$$P'              `$$$.     Host: KVM/QEMU (Standard PC (i440FX + PIIX, 1996) pc-i440fx-4.0) 
+',$$P       ,ggs.     `$$b:   Kernel: 5.10.0-11-amd64 
+`d$$'     ,$P"'   .    $$$    Uptime: 37 days, 6 hours, 44 mins 
+ $$P      d$'     ,    $$P    Packages: 1087 (dpkg) 
+ $$:      $$.   -    ,d$$'    Shell: bash 5.1.4 
+ $$;      Y$b._   _,d$P'      Resolution: 1024x768 
+ Y$$.    `.`"Y$$$$P"'         Terminal: /dev/pts/0 
+ `$$b      "-.__              CPU: Intel Xeon E5-2630 v4 (6) @ 2.199GHz 
+  `Y$$                        GPU: 00:02.0 Vendor 1234 Device 1111 
+   `Y$$.                      Memory: 8562MiB / 16008MiB 
+     `$$b.
+       `Y$$b.                                         
+          `"Y$b._                                     
+              `"""
+
+root@core:~/hitokoto-go# 
+```
+
+### 开发机
+
+```shell
+nya@CandiFantasy:/mnt/d/Projects/go/hitokoto-go$ wrk -t8 -c1000 -d10s --latency http://localhost:8080
+Running 10s test @ http://localhost:8080
+  8 threads and 1000 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency    31.64ms    4.87ms 125.23ms   91.67%
+    Req/Sec     3.97k   236.24     4.55k    81.06%
+  Latency Distribution
+     50%   30.34ms
+     75%   32.33ms
+     90%   35.36ms
+     99%   52.81ms
+  312527 requests in 10.01s, 235.11MB read
+Requests/sec:  31207.84
+Transfer/sec:     23.48MB
+nya@CandiFantasy:/mnt/d/Projects/go/hitokoto-go$ neofetch
+            .-/+oossssoo+/-.
+        `:+ssssssssssssssssss+:`
+      -+ssssssssssssssssssyyssss+-         nya@CandiFantasy 
+    .ossssssssssssssssssdMMMNysssso.       ---------------- 
+   /ssssssssssshdmmNNmmyNMMMMhssssss/      OS: Ubuntu 20.04.4 LTS on Windows 10 x86_64 
+  +ssssssssshmydMMMMMMMNddddyssssssss+     Kernel: 5.10.102.1-microsoft-standard-WSL2 
+ /sssssssshNMMMyhhyyyyhmNMMMNhssssssss/    Uptime: 9 hours, 4 mins 
+.ssssssssdMMMNhsssssssssshNMMMdssssssss.   Packages: 800 (dpkg) 
++sssshhhyNMMNyssssssssssssyNMMMysssssss+   Shell: bash 5.0.17 
+ossyNMMMNyMMhsssssssssssssshmmmhssssssso   Theme: Adwaita [GTK3] 
+ossyNMMMNyMMhsssssssssssssshmmmhssssssso   Icons: Adwaita [GTK3] 
++sssshhhyNMMNyssssssssssssyNMMMysssssss+   Terminal: /dev/pts/1 
+.ssssssssdMMMNhsssssssssshNMMMdssssssss.   CPU: AMD Ryzen 9 5900X (24) @ 3.693GHz 
+ /sssssssshNMMMyhhyyyyhdNMMMNhssssssss/    GPU: b10e:00:00.0 Microsoft Corporation Device 008e 
+  +sssssssssdmydMMMMMMMMddddyssssssss+     Memory: 2535MiB / 64282MiB 
+   /ssssssssssshdmNNNNmyNMMMMhssssss/
+    .ossssssssssssssssssdMMMNysssso.                               
+      -+sssssssssssssssssyyyssss+-                                 
+        `:+ssssssssssssssssss+:`
+            .-/+oossssoo+/-.
+
+
+
+nya@CandiFantasy:/mnt/d/Projects/go/hitokoto-go$
+
+```
 
 ## 开发团队
 
