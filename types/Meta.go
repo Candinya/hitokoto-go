@@ -6,5 +6,6 @@ type MetaCategory struct {
 }
 
 type Meta struct {
+	AllCount   uint
 	Categories []MetaCategory
 }

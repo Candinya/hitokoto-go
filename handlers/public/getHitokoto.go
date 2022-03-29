@@ -7,6 +7,7 @@ import (
 	"golang.org/x/text/encoding/simplifiedchinese"
 	"golang.org/x/text/transform"
 	"gorm.io/gorm/utils"
+	"hitokoto-go/consts"
 	"hitokoto-go/global"
 	"hitokoto-go/models"
 	"hitokoto-go/types"
@@ -19,7 +20,7 @@ import (
 )
 
 type GetHitokotoQueryParams struct {
-	categories []string
+	categories []*types.MetaCategory // Will be converted in parseQueryParams()
 	encode     string
 	charset    string // Only valid when encode is text
 	callback   string // Only valid when encode is set to js
@@ -74,11 +75,11 @@ func GetHitokoto(ctx *gin.Context) {
 // RandGetOne : Get one random hitokoto in text format (for start-up msg)
 func RandGetOne() string {
 	q := &GetHitokotoQueryParams{
-		categories: []string{}, // Just random
+		categories: []*types.MetaCategory{}, // Just random
 		encode:     "text",
 		charset:    "utf-8",
 		minLength:  0,
-		maxLength:  60, // Default max length is 60
+		maxLength:  consts.DefaultMaxLen, // Default max length is 60
 	}
 
 	// Rand category
@@ -97,7 +98,7 @@ func parseQueryParams(ctx *gin.Context) *GetHitokotoQueryParams {
 	categories := ctx.QueryArray("c")
 	for _, category := range global.Meta.Categories {
 		if utils.Contains(categories, category.Key) {
-			q.categories = append(q.categories, category.Key)
+			q.categories = append(q.categories, &category)
 		}
 	}
 
@@ -114,7 +115,7 @@ func parseQueryParams(ctx *gin.Context) *GetHitokotoQueryParams {
 	}
 	maxLen, err := strconv.ParseInt(ctx.Query("max_length"), 10, 64)
 	if err != nil {
-		maxLen = 60 // Why 60? category L has min length of 31, so use 30 will cause record not found
+		maxLen = consts.DefaultMaxLen
 	} else if maxLen < minLen {
 		maxLen = minLen
 	}
@@ -126,25 +127,34 @@ func parseQueryParams(ctx *gin.Context) *GetHitokotoQueryParams {
 }
 
 func selectCategory(q *GetHitokotoQueryParams) *types.MetaCategory {
-	// Select category
-	var targetCategory types.MetaCategory
+	// Select category, using weighted random
+	var targetCategory *types.MetaCategory
 	if len(q.categories) == 0 {
 		// Just random
-		tcid := rand.Intn(len(global.Meta.Categories))
-		targetCategory = global.Meta.Categories[tcid]
+		tcid := uint(rand.Intn(int(global.Meta.AllCount)))
+		for _, c := range global.Meta.Categories {
+			if tcid <= c.Counts {
+				targetCategory = &c
+				break
+			}
+			tcid -= c.Counts
+		}
 	} else {
 		// Rand from specified categories
-		tcid := rand.Intn(len(q.categories))
-		tcKey := q.categories[tcid]
-		// Find category
-		for _, c := range global.Meta.Categories {
-			if c.Key == tcKey {
+		var ac uint // AllCounts
+		for _, c := range q.categories {
+			ac += c.Counts
+		}
+		tcid := uint(rand.Intn(int(ac)))
+		for _, c := range q.categories {
+			if tcid <= c.Counts {
 				targetCategory = c
 				break
 			}
+			tcid -= c.Counts
 		}
 	}
-	return &targetCategory
+	return targetCategory
 }
 
 func selectHitokoto(q *GetHitokotoQueryParams, targetCategory *types.MetaCategory) *models.Sentence {

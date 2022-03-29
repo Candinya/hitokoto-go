@@ -20,7 +20,7 @@ type Sentence struct {
 	CreatorUID uint
 	Reviewer   uint
 	CommitFrom string
-	Length     uint
+	Length     uint `gorm:"index"`
 }
 
 const prefix = "sentence_"

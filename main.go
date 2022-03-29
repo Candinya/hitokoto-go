@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"hitokoto-go/cmd"
+	"hitokoto-go/global"
 	"hitokoto-go/handlers/public"
 	"hitokoto-go/inits"
 	"log"
@@ -76,7 +77,7 @@ func serv() {
 	if err := inits.Meta(); err != nil {
 		log.Fatalln(err.Error())
 	}
-	log.Println("Meta initialized")
+	log.Println("Meta initialized with", global.Meta.AllCount, "sentences")
 
 	// Initialize Random Seeds
 	if err := inits.RandomSeeds(); err != nil {
