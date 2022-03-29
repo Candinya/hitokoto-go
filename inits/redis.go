@@ -8,7 +8,7 @@ import (
 )
 
 func Redis() error {
-	ctx, _ := context.WithTimeout(context.TODO(), time.Second*3)
+	ctx, _ := context.WithTimeout(context.TODO(), 3*time.Second)
 	opt, err := redis.ParseURL(global.Config.RedisConnString)
 	if err != nil {
 		return err

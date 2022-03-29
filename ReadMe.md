@@ -1,6 +1,6 @@
 # Hitokoto-Go
 
-> Hitokoto 的 Golang 版本
+> Go implementation of [hitokoto API](https://github.com/hitokoto-osc/hitokoto-api)
 
 ## 关于
 

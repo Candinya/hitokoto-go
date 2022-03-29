@@ -9,8 +9,8 @@ import (
 	"gorm.io/gorm/utils"
 	"hitokoto-go/consts"
 	"hitokoto-go/global"
-	"hitokoto-go/models"
 	"hitokoto-go/types"
+	htutils "hitokoto-go/utils"
 	"io/ioutil"
 	"log"
 	"math/rand"
@@ -64,10 +64,10 @@ func GetHitokoto(ctx *gin.Context) {
 		ctx.String(http.StatusOK, encodeHitokotoToString(q, hitokoto))
 	case "json":
 		// Auto mime type
-		ctx.JSON(http.StatusOK, hitokoto.ToJSON(targetCategory.Key))
+		ctx.JSON(http.StatusOK, hitokoto)
 	default: // Fallback to JSON
 		// Auto mime type
-		ctx.JSON(http.StatusOK, hitokoto.ToJSON(targetCategory.Key))
+		ctx.JSON(http.StatusOK, hitokoto)
 	}
 
 }
@@ -157,23 +157,27 @@ func selectCategory(q *GetHitokotoQueryParams) *types.MetaCategory {
 	return targetCategory
 }
 
-func selectHitokoto(q *GetHitokotoQueryParams, targetCategory *types.MetaCategory) *models.Sentence {
-	// Select hitokoto
-	var ht models.Sentence
-	global.DB.
-		Scopes(
-			models.SentenceTable(
-				models.Sentence{Type: targetCategory.Key},
-			),
-		).
-		Where("length >= ?", q.minLength).
-		Where("length <= ?", q.maxLength).
-		Order("RANDOM()").
-		First(&ht)
-	return &ht
+func selectHitokoto(q *GetHitokotoQueryParams, targetCategory *types.MetaCategory) *types.Sentence {
+	// Parse limitation
+	limit := &htutils.SelectLimitation{
+		Category: targetCategory.Key,
+		MinLen:   q.minLength,
+		MaxLen:   q.maxLength,
+	}
+
+	// Prefer Cache
+	hitokoto := htutils.SelectHitokotoFromCache(limit)
+	if hitokoto == nil {
+		// Fallback to DB
+		hitokoto = htutils.SelectHitokotoFromDB(limit)
+	}
+
+	// If DB fails, nothing to do, so no need to check for nil
+	return hitokoto
+
 }
 
-func encodeHitokotoToString(q *GetHitokotoQueryParams, hitokoto *models.Sentence) string {
+func encodeHitokotoToString(q *GetHitokotoQueryParams, hitokoto *types.Sentence) string {
 	// Encode hitokoto
 	var encoded string
 	switch q.encode {
