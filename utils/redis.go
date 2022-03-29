@@ -8,7 +8,6 @@ import (
 	"hitokoto-go/models"
 	"hitokoto-go/types"
 	"log"
-	"time"
 )
 
 func encodeCacheKey(c string) string {
@@ -29,7 +28,7 @@ func CacheCategory(c string) (int, error) {
 			),
 		).
 		Order("RANDOM()").
-		Limit(consts.RandTableSize).
+		// Limit(consts.RandTableSize). // Remove limit so that we can cache all sentences
 		Find(&mss)
 
 	// Transform to type
@@ -45,17 +44,19 @@ func CacheCategory(c string) (int, error) {
 
 func SaveHitokotosIntoCache(c string, ss []*types.Sentence) error {
 
-	ctx, _ := context.WithTimeout(context.TODO(), 3*time.Second)
+	ctx := context.TODO() // Temporarily remove context time limit
+
+	var cacheByteSs []interface{} // ???
 	for _, s := range ss {
 		cacheBytes, err := json.Marshal(&s)
 		if err != nil {
 			return err
 		}
-		err = global.Redis.LPush(ctx, encodeCacheKey(c), cacheBytes).Err()
-		if err != nil {
-			log.Println("[ERROR] Failed to save hitokoto ", s, " into cache with error: ", err)
-			return err
-		}
+		cacheByteSs = append(cacheByteSs, cacheBytes)
+	}
+	if err := global.Redis.LPush(ctx, encodeCacheKey(c), cacheByteSs...).Err(); err != nil {
+		log.Println("[ERROR] Failed to save hitokoto into cache with error: ", err)
+		return err
 	}
 
 	return nil
@@ -68,7 +69,8 @@ type SelectLimitation struct {
 }
 
 func SelectHitokotoFromCache(limit *SelectLimitation) *types.Sentence {
-	ctx, _ := context.WithTimeout(context.TODO(), 1*time.Second)
+
+	ctx := context.TODO() // Temporarily remove context time limit
 
 	// Check cache
 	sCachedCount, err := global.Redis.LLen(ctx, encodeCacheKey(limit.Category)).Result()
