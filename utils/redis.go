@@ -3,11 +3,11 @@ package utils
 import (
 	"context"
 	"encoding/json"
-	"hitokoto-go/consts"
 	"hitokoto-go/global"
 	"hitokoto-go/models"
 	"hitokoto-go/types"
 	"log"
+	"time"
 )
 
 func encodeCacheKey(c string) string {
@@ -19,6 +19,7 @@ func CacheCategory(c string) (int, error) {
 	if !global.Config.IsProdMode {
 		log.Println("[Info] Create cache for category ", c)
 	}
+
 	// Get random table from database
 	var mss []models.Sentence // Model sentences
 	global.DB.
@@ -37,26 +38,37 @@ func CacheCategory(c string) (int, error) {
 		ss = append(ss, ms.ToJSON(c))
 	}
 
-	err := SaveHitokotosIntoCache(c, ss)
+	err := saveHitokotosIntoCache(c, ss)
 
 	return len(ss), err
 }
 
-func SaveHitokotosIntoCache(c string, ss []*types.Sentence) error {
+func saveHitokotosIntoCache(c string, ss []*types.Sentence) error {
 
-	ctx := context.TODO() // Temporarily remove context time limit
+	//ctx := context.TODO() // Temporarily remove context time limit
+	ctx, _ := context.WithTimeout(context.TODO(), 3*time.Second)
 
-	var cacheByteSs []interface{} // ???
+	// Clear old cache
+	global.Redis.LTrim(ctx, encodeCacheKey(c), 1, 0)
+
+	var cacheSentenceBytes []interface{} // ???
 	for _, s := range ss {
-		cacheBytes, err := json.Marshal(&s)
+		sentenceBytes, err := json.Marshal(&s)
 		if err != nil {
 			return err
 		}
-		cacheByteSs = append(cacheByteSs, cacheBytes)
+		cacheSentenceBytes = append(cacheSentenceBytes, sentenceBytes)
 	}
-	if err := global.Redis.LPush(ctx, encodeCacheKey(c), cacheByteSs...).Err(); err != nil {
+	if len(cacheSentenceBytes) == 0 {
+		// Nothing to cache
+		log.Println("[WARN] Nothing to cache!")
+		return nil
+	}
+	if n, err := global.Redis.LPush(ctx, encodeCacheKey(c), cacheSentenceBytes...).Result(); err != nil {
 		log.Println("[ERROR] Failed to save hitokoto into cache with error: ", err)
 		return err
+	} else {
+		log.Println("[Info] Successfully saved ", n, " hitokotos of type ", c, " into cache")
 	}
 
 	return nil
@@ -70,21 +82,13 @@ type SelectLimitation struct {
 
 func SelectHitokotoFromCache(limit *SelectLimitation) *types.Sentence {
 
-	ctx := context.TODO() // Temporarily remove context time limit
+	ctx, _ := context.WithTimeout(context.TODO(), 3*time.Second)
 
 	// Check cache
 	sCachedCount, err := global.Redis.LLen(ctx, encodeCacheKey(limit.Category)).Result()
 	if sCachedCount == 0 || err != nil {
-		// Cache is invalid, rebuild it
-		if !global.Config.IsProdMode {
-			log.Println("[Info] Cache is invalid, rebuild it")
-		}
-		nscc, err := CacheCategory(limit.Category)
-		if err != nil {
-			log.Println("[ERROR] Fail to cache category ", limit.Category, " with error: ", err)
-			return nil
-		}
-		sCachedCount = int64(nscc)
+		log.Println("[WARN] No hitokoto found in cache for category ", limit.Category)
+		return nil
 	}
 
 	var selectedSentence *types.Sentence
@@ -100,6 +104,11 @@ func SelectHitokotoFromCache(limit *SelectLimitation) *types.Sentence {
 			return nil
 		}
 
+		// Push back to the end of the list
+		if err = global.Redis.RPush(ctx, encodeCacheKey(limit.Category), cachedBytes).Err(); err != nil {
+			log.Println("[ERROR] Fail to push back cached category ", limit.Category, " with error: ", err)
+		}
+
 		// Check if the sentence is valid
 		if s.Length >= limit.MinLen && s.Length <= limit.MaxLen {
 			// The one
@@ -108,22 +117,8 @@ func SelectHitokotoFromCache(limit *SelectLimitation) *types.Sentence {
 
 			// Found!
 			break
-		} else {
-			// Push back to the end of the list
-			if err = global.Redis.RPush(ctx, encodeCacheKey(limit.Category), cachedBytes).Err(); err != nil {
-				log.Println("[ERROR] Fail to push back cached category ", limit.Category, " with error: ", err)
-			}
 		}
 
-	}
-
-	if sCachedCount < consts.RandTableRecreateThreshold {
-		// Recreate cache
-		// global.Redis.Del(ctx, encodeCacheKey(limit.Category))
-		//if !global.Config.IsProdMode {
-		//	log.Println("[Info] Recreate threshold cache for category ", limit.Category)
-		//}
-		go CacheCategory(limit.Category) // Just ignore error
 	}
 	return selectedSentence
 }
