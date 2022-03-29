@@ -67,7 +67,7 @@ REDIS_CONNECTION_STRING=redis://localhost:6379/0
 
 ### 导入导出
 
-- [ ] 无数据库模式（直接读取 JSON 文件）
+- [ ] 无数据库模式（直接读取本地/远程 JSON 文件）
 - [x] 数据导入与更新
 - [ ] 数据导出（JSON格式）
 
@@ -116,7 +116,7 @@ Running 10s test @ http://127.0.0.1:8080
 Requests/sec:   3956.95
 Transfer/sec:      2.98MB
 root@core:~/hitokoto-go# neofetch
-       _,met$$$$$gg.          root@core.nyawork.dev 
+       _,met$$$$$gg.          root@core
     ,g$$$$$$$$$$$$$$$P.       --------------------- 
   ,g$$P"     """Y$$.".        OS: Debian GNU/Linux 11 (bullseye) x86_64 
  ,$$P'              `$$$.     Host: KVM/QEMU (Standard PC (i440FX + PIIX, 1996) pc-i440fx-4.0) 
