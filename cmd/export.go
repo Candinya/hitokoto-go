@@ -2,7 +2,7 @@ package cmd
 
 import "log"
 
-func Export() {
+func Export(dataDir string) {
 	// todo: export data
 	log.Fatalln("not implemented")
 }

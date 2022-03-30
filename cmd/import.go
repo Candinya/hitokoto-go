@@ -13,9 +13,7 @@ import (
 	"time"
 )
 
-func Import() {
-
-	const BaseDir = "./sentences-bundle/"
+func Import(dataDir string) {
 
 	// Auto migrate base database
 	log.Println("Start auto migrate base database...")
@@ -25,7 +23,7 @@ func Import() {
 
 	// Parse version
 	log.Println("Start parse version...")
-	versionBytes, err := os.ReadFile(path.Join(BaseDir, "version.json"))
+	versionBytes, err := os.ReadFile(path.Join(dataDir, "version.json"))
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -51,7 +49,7 @@ func Import() {
 
 	// Parse categories
 	log.Println("Start parse categories...")
-	categoriesBytes, err := os.ReadFile(path.Join(BaseDir, v.Categories.Path))
+	categoriesBytes, err := os.ReadFile(path.Join(dataDir, v.Categories.Path))
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -103,7 +101,7 @@ func Import() {
 	log.Println("Start import sentences...")
 	for _, c := range cs {
 		var ss []types.Sentence
-		cssBytes, err := os.ReadFile(path.Join(BaseDir, c.Path))
+		cssBytes, err := os.ReadFile(path.Join(dataDir, c.Path))
 		if err != nil {
 			log.Fatalln("Failed to load sentences of type ", c.Key, " with error: ", err)
 		}

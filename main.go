@@ -12,11 +12,13 @@ import (
 var (
 	isImportMode bool
 	isExportMode bool
+	dataDir      string
 )
 
 func init() {
 	flag.BoolVar(&isImportMode, "import", false, "Import sentences into database")
 	flag.BoolVar(&isExportMode, "export", false, "Export sentences from database")
+	flag.StringVar(&dataDir, "data-dir", "./sentences-bundle/", "Data directory of sentences bundle")
 }
 
 func main() {
@@ -35,10 +37,10 @@ func main() {
 	// Check commands
 
 	if isImportMode {
-		cmd.Import()
+		cmd.Import(dataDir)
 		return
 	} else if isExportMode {
-		cmd.Export()
+		cmd.Export(dataDir)
 		return
 	}
 
