@@ -20,6 +20,8 @@
 
   A: [我不想吃 DMCA](https://github.com/github/dmca/blob/5e1f9b145d35dac15a012a725cf1a399c0a17f16/2021/06/2021-06-21-netease.md)
 
+---
+
 ## 使用
 
 ### 写在前面
@@ -45,7 +47,10 @@
 
 使用二进制文件方案的用户可以在启动二进制文件时附带 `--import` 参数来启动导入数据模式。
 
+
 数据导入完成后，系统会提示 `All data imported! enjoy :D` ，此时您可不带参数地启动程序，以提供服务。
+
+---
 
 ## 开发
 
@@ -73,16 +78,17 @@ REDIS_CONNECTION_STRING=redis://localhost:6379/0
 
 ### 读取请求
 
+随机算法类：
 - [x] 纯随机
 - [x] 指定分类随机
 - [x] 句子长度限制
 - [x] 跨表随机/权重随机
-- [ ] 基于请求数量/喜欢数量权重随机
+- [ ] ~~基于请求数量/喜欢数量权重随机~~
 
+定位方式类：
 - [ ] 类型 + ID 定位
 - [ ] UUID 定位
-
-- [ ] 搜索（用户/内容）
+- [ ] 搜索
 
 ### 写入请求
 
@@ -186,6 +192,8 @@ nya@CandiFantasy:/mnt/d/Projects/go/hitokoto-go$
 
 - Nya Candy
 
-## 非常感谢
+---
+
+## 特别鸣谢
 
 - [一言开源社区](https://github.com/hitokoto-osc)
