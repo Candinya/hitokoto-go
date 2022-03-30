@@ -91,6 +91,8 @@ func SelectHitokotoFromCache(limit *SelectLimitation) *types.Sentence {
 		return nil
 	}
 
+	isMaxLengthLimitInvalid := limit.MaxLen < limit.MinLen
+
 	var selectedSentence *types.Sentence
 	for i := int64(0); i < sCachedCount; i++ {
 		var s *types.Sentence
@@ -110,7 +112,9 @@ func SelectHitokotoFromCache(limit *SelectLimitation) *types.Sentence {
 		}
 
 		// Check if the sentence is valid
-		if s.Length >= limit.MinLen && s.Length <= limit.MaxLen {
+		if s.Length >= limit.MinLen && // Check min length
+			(isMaxLengthLimitInvalid || // If max length limitation is valid
+				s.Length <= limit.MaxLen) { // Check max length
 			// The one
 			// Mark it as selected
 			selectedSentence = s

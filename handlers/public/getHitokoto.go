@@ -7,7 +7,6 @@ import (
 	"golang.org/x/text/encoding/simplifiedchinese"
 	"golang.org/x/text/transform"
 	"gorm.io/gorm/utils"
-	"hitokoto-go/consts"
 	"hitokoto-go/global"
 	"hitokoto-go/types"
 	htutils "hitokoto-go/utils"
@@ -78,8 +77,8 @@ func RandGetOne() string {
 		categories: []*types.MetaCategory{}, // Just random
 		encode:     "text",
 		charset:    "utf-8",
-		minLength:  0,
-		maxLength:  consts.DefaultMaxLen, // Default max length is 60
+		minLength:  1,
+		maxLength:  0, // Default no limitation
 	}
 
 	// Rand category
@@ -110,14 +109,12 @@ func parseQueryParams(ctx *gin.Context) *GetHitokotoQueryParams {
 
 	// Parse length limits
 	minLen, err := strconv.ParseInt(ctx.Query("min_length"), 10, 64)
-	if minLen < 0 || err != nil {
-		minLen = 0
+	if err != nil {
+		minLen = 1
 	}
 	maxLen, err := strconv.ParseInt(ctx.Query("max_length"), 10, 64)
 	if err != nil {
-		maxLen = consts.DefaultMaxLen
-	} else if maxLen < minLen {
-		maxLen = minLen
+		maxLen = 0 // Invalid limitation
 	}
 	q.minLength = uint(minLen)
 	q.maxLength = uint(maxLen)
