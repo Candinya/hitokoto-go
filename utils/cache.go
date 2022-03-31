@@ -101,7 +101,7 @@ func saveHitokotosIntoCache(limit *SelectLimitation, ss []*types.Sentence) error
 		log.Println("[ERROR] Failed to save hitokoto into cache with error: ", err)
 		return err
 	} else {
-		log.Println("[Info] Successfully saved ", n, " hitokotos of type ", limit.Category, " into cache")
+		log.Println("[Info] Successfully saved ", n, " hitokotos of type ", limit.Category, " into ", limit.OrderBy, " mode cache")
 	}
 
 	return nil
