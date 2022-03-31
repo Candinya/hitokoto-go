@@ -19,5 +19,5 @@ func SelectHitokotoFromDB(limit *SelectLimitation) *types.Sentence {
 		Where("length <= ?", limit.MaxLen).
 		Order("RANDOM()").
 		First(&ht)
-	return ht.ToJSON(limit.Category)
+	return ht.ToType(limit.Category)
 }

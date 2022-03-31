@@ -85,6 +85,13 @@ func serv() {
 	if err := inits.RandomSeeds(); err != nil {
 		log.Fatalln(err.Error())
 	}
+	log.Println("Random seeds initialized")
+
+	// Initialize Jobs
+	if err := inits.Jobs(); err != nil {
+		log.Fatalln(err.Error())
+	}
+	log.Println("Jobs initialized")
 
 	// Initialize routes
 	r := inits.Routes()

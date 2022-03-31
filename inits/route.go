@@ -13,7 +13,7 @@ func r(e *gin.Engine) {
 	publicEndpoint := e.Group("/")
 	publicEndpoint.Use(middlewares.PublicCORS())
 	{
-		publicEndpoint.GET("/", public.GetHitokoto)
+		publicEndpoint.GET("/", public.HandlerGetHitokoto)
 	}
 
 	// Commit API

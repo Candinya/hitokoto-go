@@ -2,11 +2,14 @@ package public
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	jsoniter "github.com/json-iterator/go"
 	"golang.org/x/text/encoding/simplifiedchinese"
 	"golang.org/x/text/transform"
 	"gorm.io/gorm/utils"
+	"hitokoto-go/consts"
 	"hitokoto-go/global"
 	"hitokoto-go/types"
 	htutils "hitokoto-go/utils"
@@ -16,6 +19,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type GetHitokotoQueryParams struct {
@@ -26,9 +30,13 @@ type GetHitokotoQueryParams struct {
 	selector   string // Only valid when encode is set to js
 	minLength  uint
 	maxLength  uint
+
+	// hitokoto-go specific
+	orderBy string // "default", "visit", "like"
+	desc    bool
 }
 
-func GetHitokoto(ctx *gin.Context) {
+func HandlerGetHitokoto(ctx *gin.Context) {
 
 	// Parse query params
 	q := parseQueryParams(ctx)
@@ -69,6 +77,12 @@ func GetHitokoto(ctx *gin.Context) {
 		ctx.JSON(http.StatusOK, hitokoto)
 	}
 
+	// Save visit record
+	go recordVisitCount(&types.VisitHitokotoRecord{
+		Category: targetCategory.Key,
+		ID:       hitokoto.ID,
+	})
+
 }
 
 // RandGetOne : Get one random hitokoto in text format (for start-up msg)
@@ -79,6 +93,8 @@ func RandGetOne() string {
 		charset:    "utf-8",
 		minLength:  1,
 		maxLength:  0, // Default no limitation
+		orderBy:    "default",
+		desc:       false,
 	}
 
 	// Rand category
@@ -106,6 +122,8 @@ func parseQueryParams(ctx *gin.Context) *GetHitokotoQueryParams {
 	q.charset = ctx.DefaultQuery("charset", "utf-8")
 	q.callback = ctx.Query("callback")
 	q.selector = ctx.DefaultQuery("selector", ".hitokoto")
+	q.orderBy = strings.ToLower(ctx.DefaultQuery("order_by", "default"))
+	q.desc = strings.Contains(strings.ToLower(ctx.DefaultQuery("desc", "true")), "t") // t / true / T / True
 
 	// Parse length limits
 	minLen, err := strconv.ParseInt(ctx.Query("min_length"), 10, 64)
@@ -157,9 +175,11 @@ func selectCategory(q *GetHitokotoQueryParams) *types.MetaCategory {
 func selectHitokoto(q *GetHitokotoQueryParams, targetCategory *types.MetaCategory) *types.Sentence {
 	// Parse limitation
 	limit := &htutils.SelectLimitation{
-		Category: targetCategory.Key,
-		MinLen:   q.minLength,
-		MaxLen:   q.maxLength,
+		Category:    targetCategory.Key,
+		MinLen:      q.minLength,
+		MaxLen:      q.maxLength,
+		OrderBy:     q.orderBy,
+		IsDescOrder: q.desc,
 	}
 
 	// Prefer Cache
@@ -213,4 +233,19 @@ func jsCallbackEncode(callback string, hitokoto string, selector string) string 
 			`\"`,
 		),
 	)
+}
+
+func recordVisitCount(r *types.VisitHitokotoRecord) {
+
+	ctx, _ := context.WithTimeout(context.TODO(), 3*time.Second)
+	json := jsoniter.ConfigCompatibleWithStandardLibrary // For better performance
+
+	// Add to redis cache
+	recordBytes, err := json.Marshal(r)
+	if err != nil {
+		log.Println("[ERROR] Failed to marshal visit record:", err)
+		return
+	}
+	global.Redis.LPush(ctx, consts.VisitListName, recordBytes)
+
 }

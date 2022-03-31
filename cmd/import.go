@@ -114,7 +114,7 @@ func Import(dataDir string) {
 				Scopes(models.SentenceTable(models.Sentence{Type: s.Type})).
 				First(&ms, "uuid = ?", s.UUID).
 				Error; errors.Is(err, gorm.ErrRecordNotFound) {
-				ms.FromJSON(&s)
+				ms.FromType(&s)
 				global.DB.Scopes(models.SentenceTable(ms)).Create(&ms)
 			}
 		}

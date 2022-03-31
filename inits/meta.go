@@ -4,7 +4,6 @@ import (
 	"hitokoto-go/global"
 	"hitokoto-go/models"
 	"hitokoto-go/types"
-	"hitokoto-go/utils"
 	"log"
 )
 
@@ -17,18 +16,18 @@ func Meta() error {
 	global.Meta.AllCount = 0
 
 	for _, c := range categories {
-		// Prepare counts metadata for later random usages
-		if count, err := utils.CacheCategory(c.Key); err != nil {
+		var count int64 // Prepare counts metadata for later random usages
+		if err := global.DB.Scopes(models.SentenceTable(models.Sentence{Type: c.Key})).Count(&count).Error; err != nil {
 			// warn and skip
 			log.Println("[WARN] Failed to initialize category ", c.Key, " with error: ", err)
 			continue
-		} else {
-			global.Meta.AllCount += uint(count)
-			global.Meta.Categories = append(global.Meta.Categories, types.MetaCategory{
-				Key:    c.Key,
-				Counts: uint(count),
-			})
 		}
+		uCount := uint(count)
+		global.Meta.Categories = append(global.Meta.Categories, types.MetaCategory{
+			Key:    c.Key,
+			Counts: uCount,
+		})
+		global.Meta.AllCount += uCount
 	}
 
 	// No error

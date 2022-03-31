@@ -11,6 +11,7 @@ import (
 type Sentence struct {
 	gorm.Model
 
+	// General fields
 	UUID       uuid.UUID `gorm:"type:uuid;index;not null"`
 	Hitokoto   string
 	Type       string `gorm:"-"`
@@ -21,6 +22,10 @@ type Sentence struct {
 	Reviewer   uint
 	CommitFrom string
 	Length     uint `gorm:"index"`
+
+	// DB Only Fields
+	VisitCount uint
+	LikeCount  uint
 }
 
 const prefix = "sentence_"
@@ -35,7 +40,7 @@ func SentenceTable(s Sentence) func(tx *gorm.DB) *gorm.DB {
 // db.Scopes(SentenceTable(Sentence{Type: "x"}))
 //   .Find(&sentences)
 
-func (s *Sentence) ToJSON(t string) *types.Sentence {
+func (s *Sentence) ToType(t string) *types.Sentence {
 	return &types.Sentence{
 		ID:         s.ID,
 		UUID:       s.UUID.String(),
@@ -52,7 +57,7 @@ func (s *Sentence) ToJSON(t string) *types.Sentence {
 	}
 }
 
-func (s *Sentence) FromJSON(sentence *types.Sentence) {
+func (s *Sentence) FromType(sentence *types.Sentence) {
 	// Set create time
 	created, err := strconv.ParseInt(sentence.CreatedAt, 10, 64)
 	if err == nil {
