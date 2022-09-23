@@ -9,7 +9,7 @@ require (
 	github.com/json-iterator/go v1.1.12
 	golang.org/x/text v0.3.7
 	gorm.io/driver/postgres v1.3.5
-	gorm.io/gorm v1.23.5
+	gorm.io/gorm v1.23.10
 )
 
 require (
